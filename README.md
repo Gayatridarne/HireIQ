@@ -1,73 +1,92 @@
-# AI-Powered Candidate Discovery Engine
+# HireIQ - AI-Powered Candidate Discovery Engine
 
-A full-stack app that uses Claude AI to automatically score and rank resumes against a job description — turning hours of manual screening into seconds.
+A full-stack app that uses the Groq LLM to automatically score and rank resumes against a job description, turning hours of manual screening into seconds.
 
 ## Tech Stack
 
-- **Frontend**: React, react-dropzone, react-router-dom
+- **Frontend**: React, react-router-dom, axios, react-dropzone, recharts
 - **Backend**: FastAPI, Python
-- **AI**: Anthropic Claude API
-- **OCR**: pdfplumber, pytesseract
-- **Database**: PostgreSQL + SQLAlchemy
+- **AI**: Groq API (LLM)
+- **Resume parsing**: pdfplumber, python-docx, pytesseract (OCR)
+- **Database**: PostgreSQL + SQLAlchemy (SQLite also works for local development)
 - **Auth**: JWT (python-jose + passlib)
+- **Email**: Gmail SMTP
 - **Deploy**: Docker Compose
 
 ## Features
 
 - Upload multiple resumes at once (PDF / DOCX)
-- Claude AI scores each resume 0–100 against the job description
-- Auto-extracts candidate name, email, matched skills, missing skills
-- Ranked candidate dashboard with color-coded scores
+- Groq AI scores each resume 0-100 against the job description
+- Auto-extracts candidate name, email, matched skills and missing skills
+- Ranked candidate list with color-coded score rings
+- Candidate match-details page with score breakdown, skills overlap and similar candidates
 - Search and filter candidates by name or recommendation
-- Export shortlist as CSV
-- JWT authentication with per-company data isolation
+- Candidate shortlisting
+- AI-generated interview questions with expected answers
+- AI-written accept / reject emails, sent through Gmail
+- CSV export of ranked candidates (API endpoint)
+- JWT authentication
 - Background processing so uploads return instantly
 
 ## Quick Start
 
-### 1. Clone and set up environment
+### 1. Clone the repository
 
 ```bash
 git clone <your-repo-url>
-cd candidate-discovery
+cd HireIQ
 ```
 
 ### 2. Set environment variables
 
-```bash
-# Backend
-cp backend/.env.example backend/.env
-# Edit backend/.env and add your ANTHROPIC_API_KEY
+Create `backend/.env` (you can copy `backend/.env.example`) with:
 
-# Frontend
-cp frontend/.env.example frontend/.env
+```
+DATABASE_URL=sqlite:///./hireiq.db
+GROQ_API_KEY=your_groq_api_key
+SECRET_KEY=any_long_random_text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_gmail_app_password
 ```
 
-### 3. Run with Docker
+`SMTP_*` is only needed if you want to send emails.
+For PostgreSQL use `DATABASE_URL=postgresql://user:password@localhost:5432/candidate_db`.
 
+Frontend (optional, defaults to http://localhost:8000):
+
+```
+REACT_APP_API_URL=http://localhost:8000
+```
+
+### 3. Run without Docker (local development)
+
+**Backend** (terminal 1):
 ```bash
-ANTHROPIC_API_KEY=your_key SECRET_KEY=your_secret docker-compose up --build
+cd backend
+pip install -r requirements.txt
+uvicorn main:app
+```
+
+**Frontend** (terminal 2):
+```bash
+cd frontend
+npm install
+npm start
 ```
 
 App runs at:
 - Frontend: http://localhost:3000
 - Backend API docs: http://localhost:8000/docs
 
-### 4. Run without Docker (local dev)
+### 4. Run with Docker
 
-**Backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-# Make sure PostgreSQL is running and .env is configured
-uvicorn main:app --reload
-```
+Put the same variables in a `.env` file next to `docker-compose.yml`
+(`GROQ_API_KEY`, `SECRET_KEY`, `SMTP_*`), then run:
 
-**Frontend:**
 ```bash
-cd frontend
-npm install
-npm start
+docker-compose up --build
 ```
 
 ## API Endpoints
@@ -76,19 +95,27 @@ npm start
 |--------|----------|-------------|
 | POST | /auth/register | Register new account |
 | POST | /auth/login | Login, get JWT token |
+| GET / PUT | /auth/profile | View / update company profile |
+| POST | /auth/reset-password | Change password |
 | POST | /jobs/ | Create a new job |
 | GET | /jobs/ | List all your jobs |
 | GET | /jobs/{id} | Get job details |
+| PUT | /jobs/{id} | Update a job |
 | DELETE | /jobs/{id} | Delete a job |
 | POST | /candidates/jobs/{id}/upload | Upload resumes (bulk) |
 | GET | /candidates/jobs/{id}/candidates | Get ranked candidates |
 | DELETE | /candidates/{id} | Remove a candidate |
 | GET | /candidates/jobs/{id}/export | Download CSV |
+| POST | /shortlist/candidates/{id}/shortlist | Add / remove from shortlist |
+| GET | /shortlist/jobs/{id}/shortlisted | List shortlisted candidates |
+| GET | /interview/candidates/{id}/interview-questions | AI interview questions |
+| POST | /email/send, /email/send-bulk | Send emails |
+| POST | /email/generate-ai-email, /email/send-ai-bulk | AI-written accept / reject emails |
 
 ## Project Structure
 
 ```
-candidate-discovery/
+HireIQ/
 ├── backend/
 │   ├── main.py              # FastAPI app
 │   ├── database.py          # DB connection
@@ -98,24 +125,26 @@ candidate-discovery/
 │   ├── routers/
 │   │   ├── auth.py
 │   │   ├── jobs.py
-│   │   └── candidates.py
+│   │   ├── candidates.py
+│   │   ├── shortlist.py
+│   │   ├── interview.py
+│   │   └── email_router.py
 │   └── services/
-│       ├── resume_parser.py # OCR extraction
-│       └── ai_scorer.py     # Claude API
+│       ├── resume_parser.py # PDF / DOCX / OCR text extraction
+│       └── ai_scorer.py     # Groq scoring
 ├── frontend/
 │   └── src/
 │       ├── App.js
 │       ├── api/client.js
 │       ├── hooks/useAuth.js
+│       ├── components/      # AppShell, Icon, ScoreRing, NewJobModal
 │       └── pages/
 │           ├── Login.jsx
 │           ├── Dashboard.jsx
-│           └── JobDetail.jsx
+│           ├── JobDetail.jsx
+│           ├── MatchDetails.jsx
+│           ├── InterviewQuestions.jsx
+│           └── Profile.jsx
 └── docker-compose.yml
 ```
 
-## Resume Bullet Points
-
-- Built an AI-powered candidate ranking engine using Claude API to score resumes against job descriptions, reducing shortlisting time from hours to seconds
-- Engineered a bulk resume processing pipeline in FastAPI handling simultaneous PDF/DOCX uploads with async background tasks
-- Developed a React recruiter dashboard with AI-generated match scores, skill gap analysis, and CSV export
