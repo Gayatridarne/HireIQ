@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/client";
+import AppShell from "../components/AppShell";
+import Icon from "../components/Icon";
 
 const categoryColors = {
   Technical: "badge-info",
@@ -45,77 +47,72 @@ export default function InterviewQuestions() {
   };
 
   if (loading) return (
-    <div className="loading-screen">
-      <div className="spinner" />
-      <p style={{ fontWeight: 600 }}>AI is generating interview questions and answers...</p>
-      <p className="text-faint" style={{ fontSize: "0.85rem" }}>This may take 10-15 seconds</p>
-    </div>
+    <AppShell>
+      <div className="loading-screen">
+        <div className="spinner" />
+        <p style={{ fontWeight: 600, color: "var(--text)" }}>AI is generating interview questions and answers…</p>
+        <p className="text-faint" style={{ fontSize: "0.85rem" }}>This may take 10-15 seconds</p>
+      </div>
+    </AppShell>
   );
 
   if (error) return (
-    <div className="container-narrow" style={{ textAlign: "center", marginTop: "3rem" }}>
-      <div className="card">
-        <div className="empty-state-icon">⚠️</div>
-        <h2 style={{ color: "var(--color-danger)", marginBottom: "0.5rem" }}>Error</h2>
-        <p className="text-muted" style={{ marginBottom: "1.5rem" }}>{error}</p>
-        <button onClick={() => navigate(-1)} className="btn btn-secondary">Go Back</button>
+    <AppShell>
+      <div className="card empty-state" style={{ maxWidth: 520, margin: "3rem auto" }}>
+        <div className="empty-state-icon"><Icon name="alert" size={24} className="" /></div>
+        <p className="empty-state-title">Could not generate questions</p>
+        <p className="empty-state-sub" style={{ marginBottom: "1.2rem" }}>{error}</p>
+        <button onClick={() => navigate(-1)} className="btn btn-secondary">Go back</button>
       </div>
-    </div>
+    </AppShell>
   );
 
   return (
-    <div className="page">
-      <div className="topbar">
-        <div className="flex gap-md" style={{ alignItems: "center" }}>
-          <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm">← Back</button>
-          <div>
-            <h1 style={{ fontSize: "1.15rem", fontWeight: 700 }}>🤖 AI Interview Questions and Answers</h1>
-            <p className="text-faint" style={{ fontSize: "0.8rem" }}>Generated for {data?.candidate_name}</p>
-          </div>
+    <AppShell>
+      <nav className="crumbs" aria-label="Breadcrumb">
+        <button onClick={() => navigate(-1)}><Icon name="arrowLeft" size={15} className="" /> Back</button>
+        <Icon name="chevronRight" size={13} className="" />
+        <span className="current">Interview questions</span>
+      </nav>
+
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Interview questions</h1>
+          <p className="page-sub">AI-generated for {data?.candidate_name} • {data?.questions?.length} questions with expected answers</p>
         </div>
-        <button onClick={copyAll} className={"btn btn-sm " + (copied === "all" ? "btn-success" : "btn-primary")}>
-          {copied === "all" ? "✓ Copied All!" : "Copy All"}
-        </button>
+        <div className="page-actions">
+          <button onClick={copyAll} className={"btn " + (copied === "all" ? "btn-success" : "btn-primary")}>
+            <Icon name={copied === "all" ? "check" : "copy"} size={16} className="" /> {copied === "all" ? "Copied" : "Copy all"}
+          </button>
+        </div>
       </div>
 
-      <div className="container">
-        <div className="card flex gap-md" style={{ alignItems: "center", marginBottom: "1.5rem" }}>
-          <div className="avatar" style={{ width: 56, height: 56, fontSize: "1.4rem" }}>
-            {data?.candidate_name?.[0]?.toUpperCase() || "?"}
-          </div>
-          <div>
-            <h2 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.2rem" }}>{data?.candidate_name}</h2>
-            <p className="text-muted" style={{ fontSize: "0.85rem" }}>{data?.questions?.length} questions with answers</p>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {data?.questions?.map((q, index) => {
-            const badgeClass = categoryColors[q.category] || "badge-neutral";
-            return (
-              <div key={index} className="panel">
-                <div className="flex gap-md" style={{ padding: "1rem 1.2rem", background: "#fafbfc", borderBottom: "1px solid var(--color-border)", alignItems: "center" }}>
-                  <span className="avatar" style={{ width: 28, height: 28, fontSize: "0.8rem" }}>{index + 1}</span>
-                  <span className={"badge " + badgeClass}>{q.category}</span>
-                </div>
-                <div style={{ padding: "1.1rem 1.2rem" }}>
-                  <p style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "0.5rem", lineHeight: 1.5 }}>Q: {q.question}</p>
-                  <p className="text-muted" style={{ fontSize: "0.8rem", fontStyle: "italic", marginBottom: "0.9rem" }}>Why asked: {q.why_asked}</p>
-                  <button onClick={() => toggleAnswer(index)} className={"btn btn-sm " + (showAnswer[index] ? "btn-success" : "btn-info-outline")}>
-                    {showAnswer[index] ? "Hide Answer" : "Show Answer"}
-                  </button>
-                  {showAnswer[index] && (
-                    <div className="fade-in" style={{ background: "var(--color-success-bg)", border: "1px solid var(--color-success-border)", borderRadius: "var(--radius-md)", padding: "1rem", marginTop: "0.7rem" }}>
-                      <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-success)", marginBottom: "0.4rem" }}>Expected Answer:</p>
-                      <p style={{ fontSize: "0.9rem", lineHeight: 1.6 }}>{q.answer}</p>
-                    </div>
-                  )}
-                </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: 860 }}>
+        {data?.questions?.map((q, index) => {
+          const badgeClass = categoryColors[q.category] || "badge-neutral";
+          return (
+            <div key={index} className="panel">
+              <div className="qa-head">
+                <span className="qa-num">{index + 1}</span>
+                <span className={"badge " + badgeClass}>{q.category}</span>
               </div>
-            );
-          })}
-        </div>
+              <div style={{ padding: "1.1rem 1.2rem" }}>
+                <p style={{ fontWeight: 600, fontSize: "0.98rem", marginBottom: "0.5rem", lineHeight: 1.5 }}>{q.question}</p>
+                <p className="text-muted" style={{ fontSize: "0.82rem", marginBottom: "0.9rem" }}>Why it is asked: {q.why_asked}</p>
+                <button onClick={() => toggleAnswer(index)} className={"btn btn-sm " + (showAnswer[index] ? "btn-success" : "btn-outline")}>
+                  {showAnswer[index] ? "Hide answer" : "Show answer"}
+                </button>
+                {showAnswer[index] && (
+                  <div className="fade-in" style={{ background: "var(--success-bg)", border: "1px solid var(--success-border)", borderRadius: "var(--radius-md)", padding: "1rem", marginTop: "0.8rem" }}>
+                    <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--success)", marginBottom: "0.4rem" }}>Expected answer</p>
+                    <p style={{ fontSize: "0.9rem", lineHeight: 1.6 }}>{q.answer}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </AppShell>
   );
 }

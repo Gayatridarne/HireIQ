@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import JobDetail from "./pages/JobDetail";
+import MatchDetails from "./pages/MatchDetails";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import InterviewQuestions from "./pages/InterviewQuestions";
 
@@ -22,7 +24,9 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/jobs/:id" element={<PrivateRoute><JobDetail /></PrivateRoute>} />
+      <Route path="/jobs/:jobId/candidates/:candidateId" element={<PrivateRoute><MatchDetails /></PrivateRoute>} />
       <Route path="/jobs/:jobId/candidates/:candidateId/interview" element={<PrivateRoute><InterviewQuestions /></PrivateRoute>} />
+      <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
     </Routes>
   );
 }

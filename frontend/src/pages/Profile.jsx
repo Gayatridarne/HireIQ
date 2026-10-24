@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../hooks/useAuth";
+import AppShell from "../components/AppShell";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -69,23 +70,29 @@ export default function Profile() {
   };
 
   if (!profile) return (
-    <div className="loading-screen">
-      <div className="spinner" />
-      <p>Loading...</p>
-    </div>
+    <AppShell>
+      <div className="loading-screen">
+        <div className="spinner" />
+        <p>Loading…</p>
+      </div>
+    </AppShell>
   );
 
   return (
-    <div className="container-narrow">
-      <div className="flex-between stack-mobile gap-md" style={{ marginBottom: "1.75rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>My Profile</h1>
-        <div className="flex gap-md">
-          <button onClick={() => navigate("/")} className="btn btn-secondary btn-sm">← Back to Jobs</button>
-          <button onClick={logout} className="btn btn-text-danger btn-sm">Logout</button>
+    <AppShell>
+    <div className="container-narrow" style={{ margin: 0 }}>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Settings</h1>
+          <p className="page-sub">Manage your company profile and password.</p>
+        </div>
+        <div className="page-actions">
+          <button onClick={() => navigate("/")} className="btn btn-secondary btn-sm">Back to dashboard</button>
+          <button onClick={logout} className="btn btn-danger-outline btn-sm">Log out</button>
         </div>
       </div>
 
-      <div className="card flex gap-lg" style={{ alignItems: "center", marginBottom: "1.25rem" }}>
+      <div className="card flex gap-lg" style={{ alignItems: "center", marginBottom: "1.1rem" }}>
         <div className="avatar" style={{ width: 70, height: 70, fontSize: "1.8rem" }}>
           {profile.company_name ? profile.company_name[0].toUpperCase() : profile.email[0].toUpperCase()}
         </div>
@@ -98,8 +105,8 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: "1.25rem" }}>
-        <h3 style={{ fontWeight: 700, marginBottom: "1.1rem", fontSize: "1.02rem" }}>Update Profile</h3>
+      <div className="card" style={{ marginBottom: "1.1rem" }}>
+        <h3 className="card-title">Company profile</h3>
 
         <div className="field">
           <label className="field-label">Email</label>
@@ -116,16 +123,16 @@ export default function Profile() {
           />
         </div>
 
-        {profileMsg && <p className="msg-success">✅ {profileMsg}</p>}
-        {profileError && <p className="msg-error">❌ {profileError}</p>}
+        {profileMsg && <p className="msg-success">{profileMsg}</p>}
+        {profileError && <p className="msg-error">{profileError}</p>}
 
         <button onClick={updateProfile} disabled={loading} className="btn btn-primary">
-          {loading ? "Saving..." : "Save Changes"}
+          {loading ? "Saving..." : "Save changes"}
         </button>
       </div>
 
       <div className="card">
-        <h3 style={{ fontWeight: 700, marginBottom: "1.1rem", fontSize: "1.02rem" }}>Reset Password</h3>
+        <h3 className="card-title">Change password</h3>
 
         <div className="field">
           <label className="field-label">Current Password</label>
@@ -160,13 +167,14 @@ export default function Profile() {
           />
         </div>
 
-        {passwordMsg && <p className="msg-success">✅ {passwordMsg}</p>}
-        {passwordError && <p className="msg-error">❌ {passwordError}</p>}
+        {passwordMsg && <p className="msg-success">{passwordMsg}</p>}
+        {passwordError && <p className="msg-error">{passwordError}</p>}
 
         <button onClick={resetPassword} disabled={loading} className="btn btn-primary">
-          {loading ? "Resetting..." : "Reset Password"}
+          {loading ? "Saving…" : "Reset Password"}
         </button>
       </div>
     </div>
+    </AppShell>
   );
 }
